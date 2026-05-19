@@ -18,6 +18,18 @@ WeChat Gateway provides an Express HTTP surface, local static UI, QR-assisted se
 - Bot, user, notification rule, and integration management APIs
 - Webhook-protected push/reply routes
 
+## Who This Is For
+
+- Developers building private webhook/message automation
+- Self-hosters who need a local gateway with explicit state storage
+- Teams prototyping downstream integration flows
+
+## Not For
+
+- Public deployment without stronger auth
+- Committing cookies, sessions, or private downstream URLs
+- Using automation without checking platform terms
+
 ## Current Public Release
 
 Ready to use:
@@ -99,8 +111,11 @@ npm start
 | Topic | English | Chinese |
 |---|---|---|
 | Deployment | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | [docs/DEPLOYMENT.zh-CN.md](docs/DEPLOYMENT.zh-CN.md) |
+| Usage/API examples | [docs/USAGE_EXAMPLES.md](docs/USAGE_EXAMPLES.md) | [docs/USAGE_EXAMPLES.zh-CN.md](docs/USAGE_EXAMPLES.zh-CN.md) |
+| Screenshots | [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) | [docs/SCREENSHOTS.zh-CN.md](docs/SCREENSHOTS.zh-CN.md) |
 | AI handoff | [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) | [docs/AI_HANDOFF.zh-CN.md](docs/AI_HANDOFF.zh-CN.md) |
 | Roadmap | [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/ROADMAP.zh-CN.md](docs/ROADMAP.zh-CN.md) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) | [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md) |
 
 ## AI-Assisted Development
 

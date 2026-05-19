@@ -18,6 +18,18 @@ WeChat Gateway 提供 Express HTTP 接口、本地静态 UI、二维码辅助登
 - bot、用户、通知规则和集成管理 API
 - 受 webhook secret 保护的 push/reply 路由
 
+## 适合谁
+
+- 构建私有 webhook/消息自动化的开发者
+- 需要本地网关和显式状态存储的自托管用户
+- 原型验证下游集成流程的小团队
+
+## 不适合
+
+- 未强化鉴权的公开部署
+- 提交 cookies、会话或私有下游 URL
+- 未确认平台条款就使用自动化能力
+
 ## 当前公开版状态
 
 已经可以使用：
@@ -99,8 +111,11 @@ npm start
 | 主题 | 中文 | English |
 |---|---|---|
 | 部署 | [docs/DEPLOYMENT.zh-CN.md](docs/DEPLOYMENT.zh-CN.md) | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| 使用/API 示例 | [docs/USAGE_EXAMPLES.zh-CN.md](docs/USAGE_EXAMPLES.zh-CN.md) | [docs/USAGE_EXAMPLES.md](docs/USAGE_EXAMPLES.md) |
+| 截图 | [docs/SCREENSHOTS.zh-CN.md](docs/SCREENSHOTS.zh-CN.md) | [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) |
 | AI 接手 | [docs/AI_HANDOFF.zh-CN.md](docs/AI_HANDOFF.zh-CN.md) | [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) |
 | 路线图 | [docs/ROADMAP.zh-CN.md](docs/ROADMAP.zh-CN.md) | [docs/ROADMAP.md](docs/ROADMAP.md) |
+| 更新日志 | [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md) | [CHANGELOG.md](CHANGELOG.md) |
 
 ## AI 辅助开发说明
 
