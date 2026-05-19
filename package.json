@@ -1,0 +1,22 @@
+{
+  "name": "wechat-clawbot-gateway",
+  "version": "6.0.0",
+  "description": "Dockerized WeChat ClawBot bidirectional gateway for webhook notifications and command handling.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "qrcode": "1.5.4",
+    "sql.js": "^1.14.1",
+    "undici": "^7.0.0",
+    "weixin-agent-sdk": "0.1.0",
+    "yazl": "^3.3.1"
+  }
+}

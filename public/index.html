@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WeChat ClawBot Gateway</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      html { scroll-behavior: smooth; }
+      body { background: #f4f6f3; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
+      .card { border-radius: 16px; }
+      .box { background: #f8faf8; border: 1px solid #dde7dd; border-radius: 12px; padding: 10px 12px; }
+      .chat-box { max-height: 360px; overflow: auto; background: #fafcfa; border: 1px solid #dde7dd; border-radius: 12px; padding: 12px; }
+      .chat-msg { padding: 10px 12px; border-radius: 12px; margin-bottom: 8px; white-space: pre-wrap; }
+      .chat-msg.inbound { background: #eef3ee; }
+      .chat-msg.outbound { background: #e2f3e7; }
+      .small-muted { color: #5f6f60; font-size: 0.92rem; }
+      .value-row { display: flex; gap: 8px; align-items: stretch; }
+      .value-row .box { flex: 1; }
+      .field-tools { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; }
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid #dde7dd;
+        background: #fff;
+        color: #455347;
+        cursor: pointer;
+        transition: all 0.16s ease;
+      }
+      .icon-btn:hover { border-color: #c6d6c6; background: #f2f7f2; }
+      .icon-btn.copied { background: #dff2e4; color: #0b6b2d; border-color: #b7dfc2; }
+      .icon-btn.copy-failed { background: #fbe7e7; color: #a12626; border-color: #efc1c1; }
+      .copy-icon { font-size: 0.96rem; line-height: 1; }
+      .hint-dot {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #edf2ee;
+        color: #526153;
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: help;
+        flex-shrink: 0;
+      }
+      .hint-dot::after {
+        content: attr(data-help);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 10px);
+        transform: translateX(-50%);
+        min-width: 240px;
+        max-width: 320px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #1f2a21;
+        color: #fff;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        white-space: normal;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 30;
+      }
+      .hint-dot::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 4px);
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #1f2a21;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 30;
+      }
+      .hint-dot:hover::after,
+      .hint-dot:hover::before { opacity: 1; }
+      .field-note { margin-top: 6px; color: #5f6f60; font-size: 0.84rem; min-height: 1.2em; }
+      .preset-card {
+        background: linear-gradient(135deg, #f5fbf6, #edf7ef);
+        border: 1px solid #d8e8da;
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .preset-title { font-weight: 700; margin-bottom: 6px; }
+      .preset-code {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(31, 122, 69, 0.08);
+        font-size: 0.84rem;
+      }
+      .page-shell { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 20px; align-items: start; }
+      .sidebar-card { position: sticky; top: 16px; }
+      .section-nav { display: grid; gap: 10px; }
+      .nav-link-card {
+        display: block;
+        padding: 12px 14px;
+        border-radius: 14px;
+        text-decoration: none;
+        color: #233124;
+        border: 1px solid #d9e5d9;
+        background: #f9fbf9;
+      }
+      .nav-link-card:hover { background: #eef5ef; border-color: #c8dbc8; }
+      .nav-link-card.active {
+        background: linear-gradient(135deg, #183b22, #285336);
+        border-color: #183b22;
+        color: #f5fff7;
+        box-shadow: 0 14px 26px rgba(24, 59, 34, 0.22);
+      }
+      .nav-link-card.active span { color: rgba(245, 255, 247, 0.8); }
+      .nav-link-card strong { display: block; font-size: 0.96rem; }
+      .nav-link-card span { display: block; color: #5f6f60; font-size: 0.82rem; margin-top: 4px; }
+      .content-stack { display: grid; gap: 20px; }
+      .section-card .card-body { padding: 20px; }
+      .section-card[hidden] { display: none !important; }
+      .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+      .section-copy { color: #5f6f60; font-size: 0.92rem; margin-bottom: 18px; }
+      .toast-area {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 1080;
+        display: grid;
+        gap: 10px;
+        width: min(360px, calc(100vw - 32px));
+      }
+      .toast-note {
+        border-radius: 14px;
+        padding: 12px 14px;
+        color: #102111;
+        border: 1px solid #cfe3d2;
+        background: #edf8ef;
+        box-shadow: 0 16px 32px rgba(18, 37, 20, 0.16);
+      }
+      .toast-note.error {
+        background: #fff1f1;
+        border-color: #f3c7c7;
+        color: #5a1c1c;
+      }
+      .toast-note.info {
+        background: #eef5fb;
+        border-color: #cbdced;
+        color: #17324f;
+      }
+      .choice-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+      .choice-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #d9e5d9;
+        background: #fbfdfb;
+      }
+      .choice-chip input { margin: 0; }
+      .people-stack { display: grid; gap: 22px; }
+      .section-subcopy { color: #5f6f60; font-size: 0.86rem; margin-bottom: 12px; }
+      .people-overview-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+      .relationship-card {
+        background: #ffffff;
+        border: 1px solid #dce6dc;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 8px 20px rgba(24, 59, 34, 0.05);
+      }
+      .relationship-card-primary {
+        border-color: #8eb79a;
+        box-shadow: 0 12px 28px rgba(24, 59, 34, 0.08);
+      }
+      .relationship-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .relationship-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .status-pill,
+      .bot-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        background: #edf4ee;
+        color: #29422f;
+      }
+      .status-pill.default {
+        background: #1f6a38;
+        color: #f4fff7;
+      }
+      .metric-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 14px;
+      }
+      .metric-card {
+        border-radius: 12px;
+        background: #f3f7f3;
+        border: 1px solid #dde7dd;
+        padding: 10px 12px;
+      }
+      .metric-label {
+        color: #5f6f60;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .metric-value {
+        margin-top: 4px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #213424;
+      }
+      .relationship-stack,
+      .binding-list,
+      .target-group-stack {
+        display: grid;
+        gap: 10px;
+      }
+      .relationship-item {
+        border: 1px solid #dde7dd;
+        border-radius: 12px;
+        background: #fbfdfb;
+        padding: 10px 12px;
+      }
+      .relationship-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .binding-chip {
+        border: 1px solid #dbe6dc;
+        border-radius: 12px;
+        background: #fbfdfb;
+        padding: 10px 12px;
+      }
+      .binding-chip-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .people-main-grid {
+        display: grid;
+        gap: 18px;
+      }
+      .user-card-grid {
+        display: grid;
+        gap: 16px;
+      }
+      .capability-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .capability-pill,
+      .delivery-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f1f6f1;
+        border: 1px solid #dbe6dc;
+        color: #29422f;
+        font-size: 0.84rem;
+      }
+      .delivery-list {
+        display: grid;
+        gap: 10px;
+      }
+      .delivery-item {
+        border: 1px solid #dde7dd;
+        border-radius: 14px;
+        background: #f8fbf8;
+        padding: 12px 14px;
+      }
+      .delivery-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .user-editor-panel {
+        border-top: 1px dashed #d8e3d8;
+        padding-top: 14px;
+      }
+      @media (min-width: 1200px) {
+        .people-main-grid {
+          grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+          align-items: start;
+        }
+      }
+      @media (max-width: 767.98px) {
+        .metric-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 1199.98px) {
+        .page-shell { grid-template-columns: 1fr; }
+        .sidebar-card { position: static; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container py-4">
+      <div class="d-flex justify-content-between align-items-start mb-4 gap-3">
+        <div>
+          <h1 class="h3 mb-1">微信双向网关控制台</h1>
+          <div class="small-muted">支持旧版推送、集成级 webhook、微信命令外发和异步回包。</div>
+        </div>
+        <div id="statusText" class="badge text-bg-secondary fs-6">未登录</div>
+      </div>
+      <div id="toastArea" class="toast-area"></div>
+
+      <div class="page-shell">
+        <aside>
+          <div class="card sidebar-card">
+            <div class="card-body">
+              <div class="small text-uppercase text-secondary mb-2">快速导航</div>
+              <div class="section-nav">
+                <a class="nav-link-card" href="#robotsSection" data-section-link="robotsSection"><strong>机器人</strong><span>新增、扫码登录、默认机器人</span></a>
+                <a class="nav-link-card" href="#configSection" data-section-link="configSection"><strong>全局配置</strong><span>旧版 Token 与公共地址</span></a>
+                <a class="nav-link-card" href="#integrationsSection" data-section-link="integrationsSection"><strong>集成</strong><span>Webhook、命令、回包配置</span></a>
+                <a class="nav-link-card" href="#peopleSection" data-section-link="peopleSection"><strong>用户与通知</strong><span>给谁发、接收哪些来源、当前会收到什么</span></a>
+                <a class="nav-link-card" href="#rulesSection" data-section-link="rulesSection"><strong>高级规则</strong><span>只有需要特殊路由时才来这里</span></a>
+                <a class="nav-link-card" href="#chatSection" data-section-link="chatSection"><strong>测试与诊断</strong><span>测试对话、连通性、任务和日志</span></a>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main class="content-stack">
+          <section id="robotsSection" class="section-card card">
+            <div class="card-body">
+              <div class="section-title">
+                <div>
+                  <h2 class="h4 mb-1">机器人账号</h2>
+                  <div class="section-copy">这里管理多个微信机器人账号。每个机器人只绑定一个微信，`设为默认` 后会作为默认发送账号。</div>
+                </div>
+              </div>
+              <div class="row g-4">
+                <div class="col-12 col-xl-5">
+                  <form id="botForm" class="row g-3">
+                    <div class="col-12 col-md-5">
+                      <label class="form-label" for="botIdInput">机器人 ID</label>
+                      <input id="botIdInput" class="form-control mono" type="text" placeholder="例如：cz、czg、wdc" />
+                    </div>
+                    <div class="col-12 col-md-5">
+                      <label class="form-label" for="botNameInput">显示名称</label>
+                      <input id="botNameInput" class="form-control" type="text" placeholder="例如：主微信、工作微信" />
+                    </div>
+                    <div class="col-12 col-md-2 d-flex align-items-end">
+                      <div class="form-check mb-2">
+                        <input id="botDefaultInput" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label" for="botDefaultInput">默认</label>
+                      </div>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                      <button class="btn btn-success" type="submit">新增机器人</button>
+                      <button id="botResetBtn" class="btn btn-outline-secondary" type="button">重置</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-12 col-xl-7">
+                  <div id="botList" class="vstack gap-3">
+                    <div class="small-muted">暂无机器人账号。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="configSection" class="section-card card">
+            <div class="card-body">
+              <div class="section-title">
+                <div>
+                  <h2 class="h4 mb-1">全局配置</h2>
+                  <div class="section-copy">这里是整个网关共享的基础配置。平时主要用来管理旧版 Webhook Token 和公共访问地址。</div>
+                </div>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                  <div class="box">
+                    <div class="small text-uppercase text-secondary">当前账号</div>
+                    <div id="accountId" class="mono mt-2">-</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-3">
+                  <div class="box">
+                    <div class="small text-uppercase text-secondary">局域网 IP</div>
+                    <div id="lanIp" class="mono mt-2">-</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-3">
+                  <div class="box">
+                    <div class="small text-uppercase text-secondary">目标数</div>
+                    <div id="targetCount" class="mt-2 fw-semibold">0</div>
+                  </div>
+                </div>
+              </div>
+              <form id="configForm" class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="tokenInput">旧版 Webhook Token</label>
+                  <input id="tokenInput" class="form-control mono" type="text" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="publicBaseUrlInput">Public Base URL</label>
+                  <input id="publicBaseUrlInput" class="form-control mono" type="text" placeholder="可选，影响外发 replyWebhookUrl" />
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-dark" type="submit">保存全局配置</button>
+                </div>
+              </form>
+              <div class="mt-3">
+                <div class="small text-uppercase text-secondary mb-2">旧版 API</div>
+                <div id="pushUrl" class="box mono small">-</div>
+                <div id="moviePilotUrl" class="box mono small mt-2">-</div>
+              </div>
+            </div>
+          </section>
+
+          <section id="integrationsSection" class="section-card card">
+            <div class="card-body">
+              <div class="section-title">
+                <div>
+                  <h2 class="h4 mb-1">集成配置</h2>
+                  <div class="section-copy">这里配置外部系统怎样推送到微信，以及微信里的命令怎样转发给外部系统。</div>
+                </div>
+              </div>
+              <div class="row g-4">
+                <div class="col-12 col-xl-5">
+                  <form id="integrationForm" class="row g-3">
+                    <input id="integrationIdInput" type="hidden" />
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="integrationNameInput">名称</label>
+                      <input id="integrationNameInput" class="form-control" type="text" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="integrationAliasInput">别名</label>
+                      <input id="integrationAliasInput" class="form-control mono" type="text" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="integrationTypeInput">适配器类型</label>
+                      <select id="integrationTypeInput" class="form-select"></select>
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-end">
+                      <div class="form-check">
+                        <input id="integrationEnabledInput" class="form-check-input" type="checkbox" checked />
+                        <label class="form-check-label" for="integrationEnabledInput">启用</label>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="incomingTokenInput">入站 Token</label>
+                      <input id="incomingTokenInput" class="form-control mono" type="text" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="replyTokenInput">回包 Token</label>
+                      <input id="replyTokenInput" class="form-control mono" type="text" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="outgoingUrlInput">外发 Webhook URL</label>
+                      <input id="outgoingUrlInput" class="form-control mono" type="text" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="outgoingBearerTokenInput">外发 Bearer Token</label>
+                      <input id="outgoingBearerTokenInput" class="form-control mono" type="text" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="commandAliasesInput">命令别名</label>
+                      <input id="commandAliasesInput" class="form-control" type="text" placeholder="逗号分隔" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="defaultTargetsInput">默认目标 ID</label>
+                      <input id="defaultTargetsInput" class="form-control mono" type="text" placeholder="逗号分隔" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="integrationNotesInput">备注</label>
+                      <textarea id="integrationNotesInput" class="form-control" rows="2" placeholder="可选：写一些自己的说明"></textarea>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                      <button class="btn btn-success" type="submit">保存集成</button>
+                      <button id="integrationResetBtn" class="btn btn-outline-secondary" type="button">重置</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-12 col-xl-7">
+                  <div id="integrationList" class="vstack gap-3">
+                    <div class="small-muted">暂无集成。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="peopleSection" class="section-card card">
+            <div class="card-body">
+              <div class="section-title">
+                <div>
+                  <h2 class="h4 mb-1">用户与通知</h2>
+                  <div class="section-copy">扫码绑定留在“机器人账号”。这里直接决定每张卡会接收哪些来源，一般不用再理解通知规则和能力这些内部概念。</div>
+                </div>
+              </div>
+              <div class="people-main-grid">
+                <div>
+                  <h3 class="h5 mb-2">家庭用户卡片</h3>
+                  <div class="section-subcopy">一张卡片就是一个接收入口。绑定目标、接收来源、当前会收到什么，都集中在这里。</div>
+                  <div id="userList" class="user-card-grid">
+                    <div class="small-muted">暂无家庭用户。</div>
+                  </div>
+                </div>
+                <div class="relationship-card">
+                  <h3 class="h5 mb-2">新增家庭用户</h3>
+                  <div class="section-subcopy">这里只负责新增。扫码登录和机器人状态仍在“机器人账号”区处理。</div>
+                  <form id="userForm" class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label" for="userIdInput">自定义用户 ID</label>
+                      <input id="userIdInput" class="form-control mono" type="text" placeholder="例如：cz、wdc" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="userNameInput">显示名称</label>
+                      <input id="userNameInput" class="form-control" type="text" placeholder="例如：我、老婆" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="userTargetSelect">绑定目标</label>
+                      <select id="userTargetSelect" class="form-select mono" multiple size="6"></select>
+                      <div id="userTargetHint" class="field-note">从这里直接选 bot / target 绑定，不再去别处找。</div>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="userCapabilitiesInput">勾选要接收的来源</label>
+                      <div id="userCapabilitiesInput" class="choice-grid"></div>
+                      <div class="field-note" id="userCapabilitiesHint">这里是可编辑入口。勾选后，这张卡就会接收对应来源的通知。</div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-check">
+                        <input id="userDefaultRecipientInput" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label" for="userDefaultRecipientInput">设为默认接收人</label>
+                      </div>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                      <button class="btn btn-success" type="submit">新增家庭用户</button>
+                      <button id="userResetBtn" class="btn btn-outline-secondary" type="button">清空</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="rulesSection" class="section-card card">
+            <div class="card-body">
+              <div class="section-title">
+                <div>
+                  <h2 class="h4 mb-1">高级规则</h2>
+                  <div class="section-copy">常用来源请直接在“用户与通知”里勾选。这里只保留给需要做特殊路由、特殊作用域时使用。</div>
+                </div>
+              </div>
+              <div class="row g-3 mb-4" id="rulePresetList"></div>
+              <div class="row g-4">
+                <div class="col-12 col-xl-5">
+                  <form id="notificationRuleForm" class="row g-3">
+                    <input id="notificationRuleIdInput" type="hidden" />
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="notificationRuleNameInput">规则名称</label>
+                      <input id="notificationRuleNameInput" class="form-control" type="text" placeholder="例如：减肥日报、Codex 完成提醒" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="notificationRuleSourceInput">来源 source</label>
+                      <input id="notificationRuleSourceInput" class="form-control mono" type="text" placeholder="例如：jianfei、codex、moviepilot" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="notificationRuleCategoryInput">分类 category / event</label>
+                      <input id="notificationRuleCategoryInput" class="form-control mono" type="text" placeholder="可选，例如：daily_report、error" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="notificationRuleKeywordsInput">关键词</label>
+                      <input id="notificationRuleKeywordsInput" class="form-control" type="text" placeholder="逗号分隔，例如：减肥, 体重, 热量" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="notificationRuleBotIdsInput">作用域机器人</label>
+                      <select id="notificationRuleBotIdsInput" class="form-select mono" multiple size="5"></select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="notificationRuleCapabilitiesInput">能力 capability</label>
+                      <input id="notificationRuleCapabilitiesInput" class="form-control" type="text" placeholder="例如：diet、codex、moviepilot" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="notificationRuleUserIdsInput">直发用户 userIds</label>
+                      <input id="notificationRuleUserIdsInput" class="form-control mono" type="text" placeholder="可选，例如：cz、wdc" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <div class="form-check">
+                        <input id="notificationRuleEnabledInput" class="form-check-input" type="checkbox" checked />
+                        <label class="form-check-label" for="notificationRuleEnabledInput">启用该规则</label>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <div class="form-check">
+                        <input id="notificationRuleAllowDefaultInput" class="form-check-input" type="checkbox" checked />
+                        <label class="form-check-label" for="notificationRuleAllowDefaultInput">未命中接收人时回落到默认接收人</label>
+                      </div>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                      <button class="btn btn-success" type="submit">保存通知规则</button>
+                      <button id="notificationRuleResetBtn" class="btn btn-outline-secondary" type="button">重置</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-12 col-xl-7">
+                  <div id="notificationRuleList" class="vstack gap-3">
+                    <div class="small-muted">暂无通知规则。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="chatSection" class="section-card card">
+            <div class="card-body">
+              <div class="section-title">
+                <div>
+                  <h2 class="h4 mb-1">测试与诊断</h2>
+                  <div class="section-copy">这里用于选定某个 bot / target 做测试发送，并集中查看连通性、任务和日志。</div>
+                </div>
+              </div>
+              <div class="row g-4">
+                <div class="col-12 col-xl-7">
+                  <h3 class="h5 mb-3">测试对话</h3>
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="chatTargetSelect">目标地址</label>
+                      <select id="chatTargetSelect" class="form-select mono"></select>
+                    </div>
+                    <div class="col-12">
+                      <div id="chatMessageList" class="chat-box"><div class="small-muted">请选择目标地址。</div></div>
+                    </div>
+                  </div>
+                  <form id="chatForm" class="row g-3 mt-1">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="chatInput">发送内容</label>
+                      <textarea id="chatInput" class="form-control" rows="3" placeholder="例如：/mp search dune"></textarea>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label" for="chatFileUrlInput">附件 URL</label>
+                      <input id="chatFileUrlInput" class="form-control mono" type="text" placeholder="可选，例如：https://example.com/report.pdf" />
+                      <div class="form-text">超出 `24.5 MiB` 时，文本类附件会自动尝试无密码 ZIP；压缩后仍超限则改发下载链接。</div>
+                    </div>
+                    <div class="col-12 col-md-5">
+                      <label class="form-label" for="chatFilePathInput">本地文件路径</label>
+                      <input id="chatFilePathInput" class="form-control mono" type="text" placeholder="可选，例如：/path/to/your/data" />
+                    </div>
+                    <div class="col-12 col-md-5">
+                      <label class="form-label" for="chatFileNameInput">附件文件名</label>
+                      <input id="chatFileNameInput" class="form-control mono" type="text" placeholder="可选，例如：report.txt" />
+                    </div>
+                    <div class="col-12 col-md-2 d-grid">
+                      <button class="btn btn-success align-self-end" type="submit">发送</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="col-12 col-xl-5">
+                  <div class="box h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <div>
+                        <h3 class="h5 mb-1">连通性测试</h3>
+                        <div class="small-muted">检查海报抓取和常见外部依赖。</div>
+                      </div>
+                      <button id="connectivityTestBtn" class="btn btn-outline-success btn-sm">检测</button>
+                    </div>
+                    <div id="connectivityTestResult" class="small-muted">点击开始检测。</div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                  <h3 class="h5 mb-3">最近外发任务</h3>
+                  <div id="dispatchList" class="vstack gap-2">
+                    <div class="small-muted">暂无任务。</div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                  <h3 class="h5 mb-3">最近日志</h3>
+                  <div id="logList" class="vstack gap-2">
+                    <div class="small-muted">日志加载中...</div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                  <h3 class="h5 mb-3">窗口状态</h3>
+                  <div id="deliveryWindowList" class="vstack gap-2">
+                    <div class="small-muted">暂无窗口状态。</div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                  <h3 class="h5 mb-3">积存队列</h3>
+                  <div id="pendingQueueList" class="vstack gap-2">
+                    <div class="small-muted">暂无积存消息。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
