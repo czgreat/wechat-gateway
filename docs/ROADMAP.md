@@ -1,32 +1,40 @@
 # Roadmap
 
-This public release is a cleaned, source-focused baseline. It is intended to be usable by developers, but each deployment still needs local configuration.
+**Language:** English | [中文](ROADMAP.zh-CN.md)
 
-## Complete enough to use
+This roadmap describes the public repository state for `wechat-gateway`. It separates what is ready to use from what each user should complete in their own environment.
 
-- Express server and static operation page are included
-- Docker example is included
-- Session state directory is configurable
-- Optional AI provider variables are represented as examples
+## Complete Enough To Use
 
-## Needs local completion
+- Local gateway server
+- Session/state storage pattern
+- Configuration and integration APIs
+- Docker deployment example
 
-- Your own login/session flow setup
-- Webhook secret
-- Persistent data directory
-- Any downstream services you want to integrate
-- Careful handling of cookies and session state outside Git
+## Needs Local Completion
 
-## Suggested improvements
+- Harden auth before shared or public deployment
+- Add encrypted state storage if required
+- Add integration-specific adapters outside the public repo
+- Add operational backup/restore notes for state files
 
-- Adapt webhook routes for a specific bot workflow
-- Add auth middleware for a public deployment
-- Write a deployment guide for a chosen VPS/NAS
-- Add integration tests around webhook payloads
+## Suggested Improvements
 
-## Documentation still worth adding
+- Split the large server into route/service modules
+- Add API request/response examples
+- Add integration tests with mocked downstream services
+- Add admin UI safeguards for secret handling
 
-- Real screenshots or short demo videos.
-- A known-good production deployment example for a generic Linux host.
-- Troubleshooting notes collected from real user deployments.
+## Documentation Still Worth Adding
 
+- Screenshots or short screen recordings using non-private demo data.
+- A fuller API example page for common requests and responses.
+- Backup and restore notes for any persistent data path.
+- A troubleshooting page based on real public issues once users start deploying it.
+
+## Maintenance Notes
+
+- Keep public examples generic.
+- Keep English and Chinese instructions aligned.
+- Prefer small issues and pull requests so AI-assisted contributors can work safely.
+- Re-run sensitive-data scans before publishing new releases.

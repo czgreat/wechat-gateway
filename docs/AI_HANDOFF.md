@@ -1,48 +1,64 @@
 # AI Handoff Guide
 
-This document is written for people who want to use an AI coding assistant to run, customize, or deploy this repository.
+**Language:** English | [中文](AI_HANDOFF.zh-CN.md)
 
+Use this file when handing `wechat-gateway` to an AI coding assistant. It gives the assistant enough context to make useful changes without depending on private deployment history.
 
-## How to use this repo with an AI coding assistant
+## First 15 Minutes
 
-Give the assistant three things at the start of a new thread:
+1. Read `README.md`, this file, and `docs/DEPLOYMENT.md`.
+2. Inspect the repository layout table in `README.md`.
+3. Run the validation command before editing anything substantial.
+4. Confirm whether the task is documentation, tests, local deployment, or product code.
+5. Keep all private credentials, state, media, and production data outside the repository.
 
-1. This repository URL.
-2. The target environment: local development, Docker, NAS, VPS, or another host.
-3. Which path you want: quick demo, production deployment, feature change, bug fix, or integration.
+## Project Summary
 
-Suggested prompt:
+WeChat Gateway provides an Express HTTP surface, local static UI, QR-assisted session flow, persistent state storage, and optional downstream integrations.
+
+## Important Paths
+
+| Path | Purpose |
+|---|---|
+| `server.js` | Express server, gateway logic, and API routes |
+| `public/` | Local browser UI assets |
+| `docker-entrypoint.sh` | Container startup helper |
+| `.env.example` | Public-safe environment template |
+| `docker-compose.example.yml` | Container deployment example |
+
+## Good First Tasks
+
+- Split the large server into route/service modules
+- Add API request/response examples
+- Add integration tests with mocked downstream services
+- Add admin UI safeguards for secret handling
+
+## Context To Provide To An AI Assistant
+
+- The repository URL and branch.
+- Your operating system and runtime versions.
+- The exact command that fails or the exact workflow you want improved.
+- Sanitized logs with secrets removed.
+- Whether you are using local development, Docker, or manual deployment.
+- Any constraints around privacy, public sharing, or supported platforms.
+
+## Suggested Prompt
 
 ```text
-Read README.md, docs/DEPLOYMENT.md, docs/AI_HANDOFF.md, and docs/ROADMAP.md first.
-My target is <local Docker / Linux server / NAS / cloud VM>.
-Help me get this project running end to end, preserve secrets in .env, and tell me exactly what values I need to provide.
+You are working in the wechat-gateway repository. Read README.md, docs/DEPLOYMENT.md, and docs/AI_HANDOFF.md first. Keep changes small, preserve public-safe examples, do not add real secrets, and run the documented validation command before summarizing changes.
 ```
-
-
-## Project summary
-
-Node.js message gateway for webhook-style automation and WeChat-compatible message flows.
-
-## Good first tasks for an AI assistant
-
-- Adapt webhook routes for a specific bot workflow
-- Add auth middleware for a public deployment
-- Write a deployment guide for a chosen VPS/NAS
-- Add integration tests around webhook payloads
-
-## Context to provide to the assistant
-
-- Operating system and CPU architecture.
-- Whether Docker is available.
-- Whether this is local-only or exposed through a reverse proxy.
-- Which secrets or API keys you will provide through `.env`.
-- Any real data paths, but do not paste secrets into chat unless you accept that risk.
 
 ## Guardrails
 
-- Do not commit `.env`, cookies, tokens, databases, uploads, logs, or generated build artifacts.
-- Prefer editing `.env.example` for documentation and `.env` only locally.
-- Keep deployment-specific paths out of source code.
-- Run the checks listed in `docs/DEPLOYMENT.md` before committing changes.
+- Do not add private `.env` values, API keys, cookies, webhook secrets, local IP addresses, production URLs, personal records, or generated artifacts.
+- Prefer focused tests over broad rewrites.
+- Keep public examples generic and runnable on a clean machine.
+- Update both English and Chinese docs when changing user-facing instructions.
+- If deployment behavior changes, update `docs/DEPLOYMENT.md` and `docs/DEPLOYMENT.zh-CN.md` in the same change.
 
+## Definition Of Done
+
+- The requested behavior or documentation change is complete.
+- Validation commands pass, or any skipped check is explicitly explained.
+- README links still work.
+- No private data or generated artifacts are committed.
